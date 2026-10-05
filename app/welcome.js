@@ -7,13 +7,13 @@ export default function Welcome() {
   const { name } = useLocalSearchParams();
   const router = useRouter();
 
-  // Optionally fade to the next screen later, but for now we just show it
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     // router.replace('/home');
-  //   }, 3000);
-  //   return () => clearTimeout(timer);
-  // }, []);
+  // Fade to the home screen after welcoming the user
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/home');
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
