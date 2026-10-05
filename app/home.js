@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 
 const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPress }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -38,9 +39,27 @@ const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPre
 export default function Home() {
   const [activeIcon, setActiveIcon] = useState(null);
   const timeoutRef = useRef(null);
+  const heartLottieRef = useRef(null);
+  const waterLottieRef = useRef(null);
+  const sunshineLottieRef = useRef(null);
+  const nourishLottieRef = useRef(null);
 
   const handleIconPress = (iconName) => {
     setActiveIcon(iconName);
+    
+    if (iconName === 'heart') {
+      heartLottieRef.current?.reset();
+      heartLottieRef.current?.play();
+    } else if (iconName === 'drop') {
+      waterLottieRef.current?.reset();
+      waterLottieRef.current?.play();
+    } else if (iconName === 'sun') {
+      sunshineLottieRef.current?.reset();
+      sunshineLottieRef.current?.play();
+    } else if (iconName === 'sparkles') {
+      nourishLottieRef.current?.reset();
+      nourishLottieRef.current?.play();
+    }
     
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
@@ -71,8 +90,56 @@ export default function Home() {
         <Text style={styles.greetingText}>“Oh! A new friend 🫶🏻🌱”</Text>
       </View>
 
-      {/* Main Clover Image */}
+      {/* Main Clover Image Container */}
       <View style={styles.imageContainer}>
+        {/* Animations Layer (Positioned behind clover, visible rising above and around it) */}
+        <View style={styles.lottieContainer} pointerEvents="none">
+          {/* Heart / Love Animation */}
+          <View style={[styles.lottieWrapper, { opacity: activeIcon === 'heart' ? 1 : 0 }]}>
+            <LottieView
+              ref={heartLottieRef}
+              source={require('../assets/animations/heart_animation.json')}
+              style={styles.heartLottie}
+              autoPlay={false}
+              loop={false}
+            />
+          </View>
+
+          {/* Water Plip Animation */}
+          <View style={[styles.lottieWrapper, { opacity: activeIcon === 'drop' ? 1 : 0 }]}>
+            <LottieView
+              ref={waterLottieRef}
+              source={require('../assets/animations/water_animation.json')}
+              style={styles.waterLottie}
+              autoPlay={false}
+              loop={false}
+            />
+          </View>
+
+          {/* Sunshine Sparkles Animation (for Sun icon) */}
+          <View style={[styles.lottieWrapper, { opacity: activeIcon === 'sun' ? 1 : 0 }]}>
+            <LottieView
+              ref={sunshineLottieRef}
+              source={require('../assets/animations/sparkles_animation.json')}
+              style={styles.sparklesLottie}
+              autoPlay={false}
+              loop={false}
+            />
+          </View>
+
+          {/* Nourishment Leaves Animation (for Nourish / Sparkles icon) */}
+          <View style={[styles.lottieWrapper, { opacity: activeIcon === 'sparkles' ? 1 : 0 }]}>
+            <LottieView
+              ref={nourishLottieRef}
+              source={require('../assets/animations/nourish_animation.json')}
+              style={styles.nourishLottie}
+              autoPlay={false}
+              loop={false}
+            />
+          </View>
+        </View>
+
+        {/* Clover Plant in Foreground */}
         <Image 
           source={require('../assets/images/clover_pot.png')} 
           style={styles.cloverImage}
@@ -151,10 +218,43 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 20,
     marginBottom: 20,
+    position: 'relative',
+  },
+  lottieContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  lottieWrapper: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heartLottie: {
+    width: 320,
+    height: 320,
+    transform: [{ translateY: -70 }, { scale: 1.6 }],
+  },
+  waterLottie: {
+    width: 320,
+    height: 320,
+    transform: [{ translateY: -60 }, { scale: 1.5 }],
+  },
+  nourishLottie: {
+    width: 320,
+    height: 320,
+    transform: [{ translateY: -65 }, { scale: 1.5 }],
+  },
+  sparklesLottie: {
+    width: 320,
+    height: 320,
+    transform: [{ translateY: -15 }, { scale: 1.35 }],
   },
   cloverImage: {
     width: 250,
     height: 250,
+    zIndex: 2,
   },
   actionRow: {
     flexDirection: 'row',
