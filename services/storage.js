@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   USER_SETTINGS: '@tenderly_user_settings',
   GARDEN_FLOWERS: '@tenderly_garden_flowers',
   BOUQUETS: '@tenderly_bouquets',
+  WHISPER_STATE: '@tenderly_whisper_state',
 };
 
 /**
@@ -120,6 +121,14 @@ export const StorageService = {
     ];
     await StorageService.saveData(STORAGE_KEYS.BOUQUETS, updated);
     return updated;
+  },
+  // Whisper sequence state
+  loadWhisperState: async () => {
+    const data = await StorageService.loadData(STORAGE_KEYS.WHISPER_STATE);
+    return data || { sequence: [], currentIndex: 0 };
+  },
+  saveWhisperState: async (state) => {
+    await StorageService.saveData(STORAGE_KEYS.WHISPER_STATE, state);
   },
 };
 

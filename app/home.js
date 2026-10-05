@@ -56,6 +56,7 @@ export default function Home() {
   const [pendingFlower, setPendingFlower] = useState(null);
   const [showBlossomModal, setShowBlossomModal] = useState(false);
   const [showAudioControls, setShowAudioControls] = useState(false);
+  const [currentWhisper, setCurrentWhisper] = useState('You are allowed to\nhave a slow day 🫶🏻');
 
   const timeoutRef = useRef(null);
   const heartLottieRef = useRef(null);
@@ -99,6 +100,41 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
+  }, []);
+  
+  // Load whisper on mount
+  useEffect(() => {
+    const initializeWhisper = async () => {
+      let state = await StorageService.loadWhisperState();
+      const allWhispers = require('../data/whispers.json');
+      
+      if (!state.sequence || state.sequence.length === 0 || state.currentIndex >= state.sequence.length) {
+        // Generate a new shuffled sequence
+        const newSequence = [...allWhispers];
+        for (let i = newSequence.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newSequence[i], newSequence[j]] = [newSequence[j], newSequence[i]];
+        }
+        
+        // Ensure the first item of the new sequence is not the same as the last item of the old sequence
+        if (state.sequence && state.sequence.length > 0) {
+          const lastWhisper = state.sequence[state.sequence.length - 1];
+          if (newSequence[0] === lastWhisper && newSequence.length > 1) {
+            [newSequence[0], newSequence[1]] = [newSequence[1], newSequence[0]];
+          }
+        }
+        
+        state = { sequence: newSequence, currentIndex: 0 };
+      }
+      
+      setCurrentWhisper(state.sequence[state.currentIndex]);
+      
+      // Advance index for the next app launch
+      state.currentIndex += 1;
+      await StorageService.saveWhisperState(state);
+    };
+    
+    initializeWhisper();
   }, []);
 
   // Handle blossoming logic when threshold (21 care actions) is reached
@@ -347,10 +383,7 @@ export default function Home() {
           {blossoming ? 'something special has grown ✨' : 'a little whisper ✨'}
         </Text>
         <Text style={styles.whisperText}>
-          {blossoming ? 'Tap the little note' : 'You are allowed to'}
-        </Text>
-        <Text style={styles.whisperText}>
-          {blossoming ? 'to receive your bloom 🫶🏻' : 'have a slow day 🫶🏻'}
+          {blossoming ? 'Tap the little note\nto receive your bloom 🫶🏻' : currentWhisper}
         </Text>
       </View>
 
