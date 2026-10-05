@@ -1,8 +1,8 @@
 # Technical Architecture
 
 ## Core Tech Stack
-- **Framework:** React Native
-- **Platform:** Expo
+- **Framework:** React Native (v0.86.3)
+- **Platform:** Expo (SDK 57)
 - **Routing:** Expo Router
 - **Language:** JavaScript
 - **Target Platform:** Android First / Google Play Store
