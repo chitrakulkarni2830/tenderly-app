@@ -55,6 +55,7 @@ export default function Home() {
   const [careCount, setCareCount] = useState(0);
   const [pendingFlower, setPendingFlower] = useState(null);
   const [showBlossomModal, setShowBlossomModal] = useState(false);
+  const [showAudioControls, setShowAudioControls] = useState(false);
 
   const timeoutRef = useRef(null);
   const heartLottieRef = useRef(null);
@@ -174,16 +175,30 @@ export default function Home() {
         </TouchableOpacity>
         
         {/* Audio Controls */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
-          <TouchableOpacity onPress={playPreviousTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="play-skip-back" size={20} color="#3E342D" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={togglePlayPause} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name={isPlaying ? "pause" : "play"} size={24} color="#3E342D" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={playNextTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="play-skip-forward" size={20} color="#3E342D" />
-          </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', minWidth: 60, justifyContent: 'center' }}>
+          {!showAudioControls ? (
+            <TouchableOpacity 
+              onPress={() => setShowAudioControls(true)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="musical-note" size={24} color="#3E342D" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#EFECE5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+              <TouchableOpacity onPress={playPreviousTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="play-skip-back" size={18} color="#3E342D" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={togglePlayPause} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#3E342D" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={playNextTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="play-skip-forward" size={18} color="#3E342D" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowAudioControls(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginLeft: 4 }}>
+                <Ionicons name="close" size={20} color="#8A9589" />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         
         <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

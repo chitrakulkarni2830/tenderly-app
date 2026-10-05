@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { createContext, useContext, useEffect } from 'react';
+import { useAudioPlaylist, useAudioPlaylistStatus, setAudioModeAsync } from 'expo-audio';
 
 const AudioContext = createContext();
 
@@ -14,95 +14,36 @@ const TRACKS = [
 ];
 
 export const AudioProvider = ({ children }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isReady, setIsReady] = useState(false);
-  const soundRef = useRef(null);
+  const playlist = useAudioPlaylist({
+    sources: TRACKS,
+    loop: 'all',
+  });
+  
+  const status = useAudioPlaylistStatus(playlist);
 
   useEffect(() => {
     // Configure audio mode for background play
-    const initAudio = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-        });
-        setIsReady(true);
-      } catch (e) {
-        console.warn('Failed to set audio mode:', e);
-      }
-    };
-    initAudio();
+    setAudioModeAsync({
+      shouldPlayInBackground: true,
+      playsInSilentMode: true,
+    }).catch((e) => console.warn('Failed to set audio mode:', e));
   }, []);
 
-  const loadAndPlayTrack = async (index, shouldPlay = true) => {
-    try {
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
-      }
-      const { sound } = await Audio.Sound.createAsync(TRACKS[index]);
-      soundRef.current = sound;
-      
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          playNextTrack();
-        }
-      });
-
-      if (shouldPlay) {
-        await sound.playAsync();
-        setIsPlaying(true);
-      }
-    } catch (e) {
-      console.warn('Failed to load track', e);
-    }
-  };
-
-  useEffect(() => {
-    if (isReady) {
-      loadAndPlayTrack(currentTrackIndex, isPlaying);
-    }
-  }, [currentTrackIndex, isReady]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
-      }
-    };
-  }, []);
-
-  const togglePlayPause = async () => {
-    if (!soundRef.current) {
-      await loadAndPlayTrack(currentTrackIndex, true);
-      return;
-    }
-
-    if (isPlaying) {
-      await soundRef.current.pauseAsync();
-      setIsPlaying(false);
+  const togglePlayPause = () => {
+    if (status.playing) {
+      playlist.pause();
     } else {
-      await soundRef.current.playAsync();
-      setIsPlaying(true);
+      playlist.play();
     }
-  };
-
-  const playNextTrack = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % TRACKS.length);
-    // Note: loadAndPlayTrack will be called automatically by the useEffect
-  };
-
-  const playPreviousTrack = () => {
-    setCurrentTrackIndex((prev) => (prev - 1 + TRACKS.length) % TRACKS.length);
-    // Note: loadAndPlayTrack will be called automatically by the useEffect
   };
 
   return (
-    <AudioContext.Provider value={{ isPlaying, togglePlayPause, playNextTrack, playPreviousTrack }}>
+    <AudioContext.Provider value={{ 
+      isPlaying: status.playing, 
+      togglePlayPause, 
+      playNextTrack: () => playlist.next(), 
+      playPreviousTrack: () => playlist.previous() 
+    }}>
       {children}
     </AudioContext.Provider>
   );
