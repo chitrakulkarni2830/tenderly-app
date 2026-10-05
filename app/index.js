@@ -22,6 +22,7 @@ export default function Index() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Animation Values
   const masterOpacity = useRef(new Animated.Value(0)).current;
@@ -83,7 +84,11 @@ export default function Index() {
 
   const handleContinue = () => {
     if (name.trim()) {
-      console.log('Name saved:', name);
+      setIsSubmitting(true);
+      // Wait a moment for the inversion effect before navigating
+      setTimeout(() => {
+        router.replace({ pathname: '/welcome', params: { name: name.trim() } });
+      }, 300);
     }
   };
 
@@ -155,12 +160,20 @@ export default function Index() {
                 />
                 
                 <TouchableOpacity 
-                  style={[styles.button, !name.trim() && styles.buttonDisabled]} 
+                  style={[
+                    styles.button, 
+                    !name.trim() && styles.buttonDisabled,
+                    isSubmitting && styles.buttonInverted
+                  ]} 
                   onPress={handleContinue}
-                  activeOpacity={0.7}
-                  disabled={!name.trim()}
+                  activeOpacity={0.9}
+                  disabled={!name.trim() || isSubmitting}
                 >
-                  <Text style={[styles.buttonText, !name.trim() && styles.buttonTextDisabled]}>
+                  <Text style={[
+                    styles.buttonText, 
+                    !name.trim() && styles.buttonTextDisabled,
+                    isSubmitting && styles.buttonTextInverted
+                  ]}>
                     CONTINUE
                   </Text>
                 </TouchableOpacity>
@@ -275,6 +288,9 @@ const styles = StyleSheet.create({
     borderColor: '#A0ACA3',
     opacity: 0.6,
   },
+  buttonInverted: {
+    backgroundColor: '#4A5D4E',
+  },
   buttonText: {
     fontFamily: 'Amarna',
     color: '#4A5D4E',
@@ -284,5 +300,8 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#A0ACA3',
+  },
+  buttonTextInverted: {
+    color: '#F5F2EC',
   }
 });
