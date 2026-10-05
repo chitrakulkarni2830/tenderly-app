@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Modal } from 'react-native';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Modal, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StorageService, getGrowthStage } from '../services/storage';
 import { isBlossomReady, selectNextFlower, FLOWER_METADATA } from '../services/garden';
 import { useAudio } from '../contexts/AudioContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const CLOVER_STAGE_IMAGES = {
   1: require('../assets/images/clover_pot.png'),      // Sprout
@@ -17,6 +18,8 @@ const CLOVER_STAGE_IMAGES = {
 };
 
 const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPress }) => {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -35,12 +38,12 @@ const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPre
       <View style={styles.iconWrapper}>
         <Image 
           source={outlineSource} 
-          style={styles.customIcon} 
+          style={[styles.customIcon, { tintColor: theme.text }]} 
           resizeMode="contain" 
         />
         <Animated.Image 
           source={filledSource} 
-          style={[styles.customIcon, styles.filledIcon, { opacity: fadeAnim }]} 
+          style={[styles.customIcon, styles.filledIcon, { opacity: fadeAnim, tintColor: theme.text }]} 
           resizeMode="contain" 
         />
       </View>
@@ -50,16 +53,34 @@ const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPre
 
 export default function Home() {
   const router = useRouter();
+  const { theme, currentThemeId, changeTheme } = useTheme();
+  const styles = getStyles(theme);
   const { isPlaying, togglePlayPause, playNextTrack, playPreviousTrack } = useAudio();
   const [activeIcon, setActiveIcon] = useState(null);
   const [careCount, setCareCount] = useState(0);
   const [pendingFlower, setPendingFlower] = useState(null);
   const [showBlossomModal, setShowBlossomModal] = useState(false);
   const [showAudioControls, setShowAudioControls] = useState(false);
+  const [showMenuModal, setShowMenuModal] = useState(false);
   const [currentWhisper, setCurrentWhisper] = useState('You are allowed to\nhave a slow day 🫶🏻');
   const [dailyMessages, setDailyMessages] = useState(null);
   const [cloverSpeech, setCloverSpeech] = useState(null);
   const [isSpeechVisible, setIsSpeechVisible] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadName = async () => {
+        const settings = await StorageService.loadUserSettings();
+        if (settings && settings.name) {
+          setUserName(settings.name);
+        } else {
+          setUserName('');
+        }
+      };
+      loadName();
+    }, [])
+  );
 
   const timeoutRef = useRef(null);
   const speechTimeoutRef = useRef(null);
@@ -214,43 +235,47 @@ export default function Home() {
 
   const isReplyVisibleRef = useRef(false);
 
-  // Cycle uncompleted Clover requests
-  useEffect(() => {
-    if (!dailyMessages) return;
+  const checkPendingRequests = useCallback(() => {
+    if (!dailyMessages || isReplyVisibleRef.current) return;
     
-    const cycleRequests = () => {
-      if (isReplyVisibleRef.current) return;
-      
-      const uncompletedCategories = Object.keys(dailyMessages.selections).filter(
-        (cat) => !dailyMessages.selections[cat].completed
-      );
-      
-      if (uncompletedCategories.length === 0) return;
-      
-      const randomCategory = uncompletedCategories[Math.floor(Math.random() * uncompletedCategories.length)];
-      const msgIndex = dailyMessages.selections[randomCategory].index;
-      const MESSAGE_LIBRARY = require('../data/messages.json');
-      const requestText = MESSAGE_LIBRARY[randomCategory].requests[msgIndex];
-      
-      setCloverSpeech(requestText);
-      setIsSpeechVisible(true);
-      
-      clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => {
-        if (!isReplyVisibleRef.current) {
-          setIsSpeechVisible(false);
-        }
-      }, 5000);
-    };
+    const uncompletedCategories = Object.keys(dailyMessages.selections).filter(
+      (cat) => !dailyMessages.selections[cat].completed
+    );
     
-    const intervalId = setInterval(cycleRequests, 12000);
-    const initialTimeoutId = setTimeout(cycleRequests, 2000);
+    if (uncompletedCategories.length === 0) {
+      setIsSpeechVisible(false);
+      return;
+    }
     
-    return () => {
-      clearInterval(intervalId);
-      clearTimeout(initialTimeoutId);
-    };
+    // Pick the first uncompleted category so it remains consistent
+    const currentCategory = uncompletedCategories[0];
+    const msgIndex = dailyMessages.selections[currentCategory].index;
+    const MESSAGE_LIBRARY = require('../data/messages.json');
+    const requestText = MESSAGE_LIBRARY[currentCategory].requests[msgIndex];
+    
+    setCloverSpeech(requestText);
+    setIsSpeechVisible(true);
   }, [dailyMessages]);
+
+  // Listen for AppState changes (background to active)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App has returned to the foreground
+        isReplyVisibleRef.current = false;
+        
+        // Slight delay on returning from background
+        setTimeout(checkPendingRequests, 500);
+      }
+    });
+
+    // Also run immediately on initial mount or when dailyMessages loads
+    checkPendingRequests();
+
+    return () => {
+      subscription.remove();
+    };
+  }, [checkPendingRequests]);
 
   const markActionCompleted = async (category) => {
     if (!dailyMessages || dailyMessages.selections[category].completed) return;
@@ -277,11 +302,6 @@ export default function Home() {
     clearTimeout(speechTimeoutRef.current);
     setCloverSpeech(replyText);
     setIsSpeechVisible(true);
-    
-    speechTimeoutRef.current = setTimeout(() => {
-      setIsSpeechVisible(false);
-      isReplyVisibleRef.current = false;
-    }, 6000);
   };
 
   const handleIconPress = (iconName) => {
@@ -350,10 +370,10 @@ export default function Home() {
       <View style={styles.navRow}>
         <TouchableOpacity 
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={() => router.push('/garden')}
-          accessibilityLabel="Open Garden"
+          onPress={() => setShowMenuModal(true)}
+          accessibilityLabel="Open Menu"
         >
-          <Feather name="menu" size={24} color="#3E342D" />
+          <Feather name="menu" size={24} color={theme.text} />
         </TouchableOpacity>
         
         {/* Audio Controls */}
@@ -363,35 +383,39 @@ export default function Home() {
               onPress={() => setShowAudioControls(true)}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="musical-note" size={24} color="#3E342D" />
+              <Ionicons name="musical-note" size={24} color={theme.text} />
             </TouchableOpacity>
           ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#EFECE5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: theme.card, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
               <TouchableOpacity onPress={playPreviousTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="play-skip-back" size={18} color="#3E342D" />
+                <Ionicons name="play-skip-back" size={18} color={theme.text} />
               </TouchableOpacity>
               <TouchableOpacity onPress={togglePlayPause} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#3E342D" />
+                <Ionicons name={isPlaying ? "pause" : "play"} size={22} color={theme.text} />
               </TouchableOpacity>
               <TouchableOpacity onPress={playNextTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="play-skip-forward" size={18} color="#3E342D" />
+                <Ionicons name="play-skip-forward" size={18} color={theme.text} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setShowAudioControls(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ marginLeft: 4 }}>
-                <Ionicons name="close" size={20} color="#8A9589" />
+                <Ionicons name="close" size={20} color={theme.subtext} />
               </TouchableOpacity>
             </View>
           )}
         </View>
         
-        <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="settings-outline" size={24} color="#3E342D" />
+        <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => router.push('/settings')}>
+          <Ionicons name="settings-outline" size={24} color={theme.text} />
         </TouchableOpacity>
       </View>
 
       {/* Greeting Text */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greetingText}>
-          {blossoming ? '“Look what we grew together... 🌸”' : '“Oh! A new friend 🫶🏻🌱”'}
+          {blossoming 
+            ? '“Look what we grew together... 🌸”' 
+            : (isSpeechVisible && cloverSpeech 
+                ? `“${cloverSpeech.replace('{name}', userName || 'friend')}”` 
+                : (userName ? `“Oh! Hi ${userName} 🫶🏻🌱”` : '“Hello, friend 🫶🏻🌱”'))}
         </Text>
       </View>
 
@@ -446,13 +470,6 @@ export default function Home() {
 
         {/* Plant Display Container */}
         <View style={styles.plantsRow}>
-          {isSpeechVisible && cloverSpeech && (
-            <Animated.View style={styles.speechBubble}>
-              <Text style={styles.speechText}>{cloverSpeech}</Text>
-              <View style={styles.speechTriangle} />
-            </Animated.View>
-          )}
-          
           {/* Clover Plant in Foreground */}
           <Image 
             source={CLOVER_STAGE_IMAGES[currentStage]} 
@@ -536,7 +553,9 @@ export default function Home() {
           {blossoming ? 'something special has grown ✨' : 'a little whisper ✨'}
         </Text>
         <Text style={styles.whisperText}>
-          {blossoming ? 'Tap the little note\nto receive your bloom 🫶🏻' : currentWhisper}
+          {blossoming 
+            ? 'Tap the little note\nto receive your bloom 🫶🏻' 
+            : (typeof currentWhisper === 'string' ? currentWhisper.replace('{name}', userName || 'friend') : currentWhisper)}
         </Text>
       </View>
 
@@ -556,7 +575,7 @@ export default function Home() {
                 <View
                   style={[
                     styles.modalImageContainer,
-                    { backgroundColor: flowerMeta.accentColor || '#F7F3EE' },
+                    { backgroundColor: flowerMeta.accentColor || theme.card },
                   ]}
                 >
                   <Image
@@ -587,14 +606,71 @@ export default function Home() {
         </View>
       </Modal>
       
+      {/* Hamburger Menu Modal */}
+      <Modal
+        visible={showMenuModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMenuModal(false)}
+      >
+        <View style={styles.menuModalOverlay}>
+          <View style={styles.menuModalContent}>
+            
+            <View style={styles.menuHeader}>
+              <Text style={styles.menuTitle}>Menu</Text>
+              <TouchableOpacity onPress={() => setShowMenuModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.menuOption}
+              onPress={() => {
+                setShowMenuModal(false);
+                router.push('/garden');
+              }}
+            >
+              <Feather name="book-open" size={20} color={theme.text} style={styles.menuOptionIcon} />
+              <Text style={styles.menuOptionText}>My Garden</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.menuDivider} />
+            <Text style={styles.menuSubtitle}>Themes</Text>
+            
+            {['garden', 'midnight', 'lavenderDusk', 'mistyMorning'].map((t) => {
+              const themeNames = {
+                garden: 'Garden',
+                midnight: 'Midnight',
+                lavenderDusk: 'Lavender Dusk',
+                mistyMorning: 'Misty Morning'
+              };
+              const isSelected = currentThemeId === t;
+              return (
+                <TouchableOpacity 
+                  key={t}
+                  style={styles.menuOption}
+                  onPress={() => changeTheme(t)}
+                >
+                  <View style={[styles.themeDot, { backgroundColor: isSelected ? theme.accent : 'transparent', borderColor: theme.border }]} />
+                  <Text style={[styles.menuOptionText, isSelected && { color: theme.accent, fontWeight: '600' }]}>
+                    {themeNames[t]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F2EC', // Cream background
+    backgroundColor: theme.background,
     justifyContent: 'space-between',
     paddingBottom: 40,
   },
@@ -612,7 +688,7 @@ const styles = StyleSheet.create({
   greetingText: {
     fontFamily: 'Amarna',
     fontSize: 22,
-    color: '#4A5D4E',
+    color: theme.text,
     textAlign: 'center',
   },
   imageContainer: {
@@ -693,14 +769,14 @@ const styles = StyleSheet.create({
     height: 72,
   },
   noteCalloutPill: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
     marginTop: -4,
     borderWidth: 1,
-    borderColor: '#E7DFD5',
-    shadowColor: '#3E342D',
+    borderColor: theme.border,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -709,7 +785,7 @@ const styles = StyleSheet.create({
   noteCalloutText: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#6B7A6A',
+    color: theme.subtext,
   },
   actionRow: {
     flexDirection: 'row',
@@ -739,43 +815,43 @@ const styles = StyleSheet.create({
   whisperSubtitle: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 8,
   },
   whisperText: {
     fontFamily: 'Amarna',
     fontSize: 22,
-    color: '#4A5D4E',
+    color: theme.text,
     textAlign: 'center',
     lineHeight: 32,
   },
   // Blossom Achievement Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(62, 52, 45, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   modalCard: {
-    backgroundColor: '#FCFAF7',
+    backgroundColor: theme.card,
     borderRadius: 28,
     padding: 24,
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
-    shadowColor: '#3E342D',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 1,
-    borderColor: '#EDE7DE',
+    borderColor: theme.border,
   },
   modalSubHeader: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 12,
     letterSpacing: 0.5,
   },
@@ -794,44 +870,44 @@ const styles = StyleSheet.create({
   modalFlowerName: {
     fontFamily: 'Amarna',
     fontSize: 24,
-    color: '#3E342D',
+    color: theme.text,
     marginBottom: 2,
   },
   modalBotanicalName: {
     fontFamily: 'Amarna',
     fontSize: 13,
-    color: '#8A9589',
+    color: theme.subtext,
     fontStyle: 'italic',
     marginBottom: 6,
   },
   modalMeaning: {
     fontFamily: 'Amarna',
     fontSize: 13,
-    color: '#6B7A6A',
-    backgroundColor: '#F0ECE4',
+    color: theme.subtext,
+    backgroundColor: theme.background,
     paddingHorizontal: 12,
     paddingVertical: 3,
     borderRadius: 12,
     marginBottom: 16,
   },
   messageBox: {
-    backgroundColor: '#F7F4EE',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderLeftWidth: 3,
-    borderLeftColor: '#C4B49F',
+    borderLeftColor: theme.border,
     width: '100%',
   },
   modalMessageText: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#4A5D4E',
+    color: theme.text,
     lineHeight: 22,
     textAlign: 'center',
   },
   modalCollectButton: {
-    backgroundColor: '#4A5D4E',
+    backgroundColor: theme.accent,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 24,
@@ -841,44 +917,68 @@ const styles = StyleSheet.create({
   modalCollectButtonText: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#FAF8F5',
+    color: theme.background,
   },
-  speechBubble: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    maxWidth: '80%',
-    position: 'absolute',
-    top: -60,
-    alignSelf: 'center',
+  menuModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuModalContent: {
+    width: '80%',
+    backgroundColor: theme.background,
+    borderRadius: 24,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    zIndex: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  speechText: {
-    fontFamily: 'InstrumentSerif_400Regular_Italic',
-    fontSize: 20,
-    color: '#3E342D',
-    textAlign: 'center',
+  menuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  speechTriangle: {
-    position: 'absolute',
-    bottom: -8,
-    left: '50%',
-    marginLeft: -8,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderTopWidth: 8,
-    borderStyle: 'solid',
-    backgroundColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#fff',
+  menuTitle: {
+    fontFamily: 'Amarna',
+    fontSize: 24,
+    color: theme.text,
+  },
+  menuSubtitle: {
+    fontFamily: 'Amarna',
+    fontSize: 14,
+    color: theme.subtext,
+    marginBottom: 12,
+    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: theme.border,
+    marginVertical: 16,
+  },
+  menuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  menuOptionIcon: {
+    marginRight: 12,
+  },
+  menuOptionText: {
+    fontFamily: 'Amarna',
+    fontSize: 18,
+    color: theme.text,
+  },
+  themeDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    marginRight: 12,
   },
 });

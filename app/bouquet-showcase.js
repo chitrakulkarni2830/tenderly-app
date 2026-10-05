@@ -6,12 +6,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StorageService } from '../services/storage';
 import { BOUQUET_TEMPLATES, FLOWER_METADATA, FLOWERS_PER_CYCLE } from '../services/garden';
 import BouquetRenderer from '../components/BouquetRenderer';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function BouquetShowcaseScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [flowers, setFlowers] = useState([]);
   
   const templateId = params.templateId || 'cottage_meadow';
@@ -39,7 +42,7 @@ export default function BouquetShowcaseScreen() {
           style={styles.closeButton}
           accessibilityLabel="Back to Studio"
         >
-          <Feather name="x" size={24} color="#8A9589" />
+          <Feather name="x" size={24} color={theme.subtext} />
         </TouchableOpacity>
       </View>
 
@@ -71,10 +74,10 @@ export default function BouquetShowcaseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F2EC', // Pure Tenderly cream
+    backgroundColor: theme.background,
     justifyContent: 'space-between',
     paddingBottom: 20,
   },
@@ -87,7 +90,7 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(238, 233, 224, 0.6)',
+    backgroundColor: theme.border,
   },
   content: {
     flex: 1,
@@ -103,14 +106,14 @@ const styles = StyleSheet.create({
   subtext: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 4,
     letterSpacing: 0.3,
   },
   title: {
     fontFamily: 'Amarna',
     fontSize: 26,
-    color: '#3E342D',
+    color: theme.text,
   },
   bouquetWrapper: {
     alignItems: 'center',
@@ -127,20 +130,20 @@ const styles = StyleSheet.create({
   flowersListText: {
     fontFamily: 'Amarna',
     fontSize: 13,
-    color: '#6B7A6A',
+    color: theme.subtext,
     textAlign: 'center',
     lineHeight: 18,
   },
   divider: {
     width: 40,
     height: 1,
-    backgroundColor: '#DCD4C7',
+    backgroundColor: theme.border,
     marginVertical: 14,
   },
   whisperText: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#4A5D4E',
+    color: theme.accent,
     textAlign: 'center',
     lineHeight: 24,
     fontStyle: 'italic',

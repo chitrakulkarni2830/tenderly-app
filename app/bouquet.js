@@ -6,11 +6,14 @@ import { useRouter } from 'expo-router';
 import { StorageService } from '../services/storage';
 import { BOUQUET_TEMPLATES, isBouquetUnlocked, FLOWER_METADATA, FLOWERS_PER_CYCLE } from '../services/garden';
 import BouquetRenderer from '../components/BouquetRenderer';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function BouquetStudioScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [flowers, setFlowers] = useState([]);
   const [selectedTemplateIndex, setSelectedTemplateIndex] = useState(0);
 
@@ -50,7 +53,7 @@ export default function BouquetStudioScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Feather name="arrow-left" size={24} color="#3E342D" />
+            <Feather name="arrow-left" size={24} color={theme.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Bouquet Studio</Text>
           <View style={styles.headerRight} />
@@ -58,7 +61,7 @@ export default function BouquetStudioScreen() {
 
         <View style={styles.lockedContainer}>
           <View style={styles.lockedIconWrapper}>
-            <Ionicons name="lock-closed-outline" size={36} color="#8A9589" />
+            <Ionicons name="lock-closed-outline" size={36} color={theme.subtext} />
           </View>
           <Text style={styles.lockedTitle}>Awaiting 5 Blooms</Text>
           <Text style={styles.lockedDescription}>
@@ -87,7 +90,7 @@ export default function BouquetStudioScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Feather name="arrow-left" size={24} color="#3E342D" />
+          <Feather name="arrow-left" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bouquet Studio</Text>
         <TouchableOpacity
@@ -95,7 +98,7 @@ export default function BouquetStudioScreen() {
           onPress={handleOpenShowcase}
           style={styles.showcaseButton}
         >
-          <Ionicons name="sparkles" size={18} color="#4A5D4E" />
+          <Ionicons name="sparkles" size={18} color={theme.accent} />
         </TouchableOpacity>
       </View>
 
@@ -205,7 +208,7 @@ export default function BouquetStudioScreen() {
           activeOpacity={0.85}
           onPress={handleOpenShowcase}
         >
-          <Ionicons name="sparkles-outline" size={18} color="#FAF8F5" style={{ marginRight: 8 }} />
+          <Ionicons name="sparkles-outline" size={18} color={theme.background} style={{ marginRight: 8 }} />
           <Text style={styles.admireButtonText}>Admire in Showcase</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -213,10 +216,10 @@ export default function BouquetStudioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F2EC', // Cream background
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -232,7 +235,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'Amarna',
     fontSize: 24,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   headerRight: {
     width: 36,
@@ -254,13 +257,13 @@ const styles = StyleSheet.create({
   introSubtitle: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 3,
   },
   introDescription: {
     fontFamily: 'Amarna',
     fontSize: 13,
-    color: '#5E6B5D',
+    color: theme.subtext,
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: 12,
@@ -268,14 +271,14 @@ const styles = StyleSheet.create({
   previewCanvas: {
     width: '100%',
     height: 380,
-    backgroundColor: '#FAF7F2',
+    backgroundColor: theme.card,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#ECE4D8',
-    shadowColor: '#3E342D',
+    borderColor: theme.border,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -297,12 +300,12 @@ const styles = StyleSheet.create({
   selectorTitle: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   selectorCountTag: {
     fontFamily: 'Amarna',
     fontSize: 11,
-    color: '#8A9589',
+    color: theme.subtext,
   },
   pillsRowSelector: {
     flexDirection: 'row',
@@ -312,47 +315,38 @@ const styles = StyleSheet.create({
   },
   arrangementPill: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#E8E1D5',
-    shadowColor: '#3E342D',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    borderColor: theme.border,
   },
   arrangementPillSelected: {
-    borderColor: '#4A5D4E',
-    backgroundColor: '#EFF3EF',
-    shadowColor: '#4A5D4E',
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: theme.accent,
+    backgroundColor: theme.border,
   },
   pillIndex: {
     fontFamily: 'Amarna',
     fontSize: 10,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 2,
   },
   pillIndexSelected: {
-    color: '#4A5D4E',
+    color: theme.accent,
     fontWeight: 'bold',
   },
   pillName: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#3E342D',
+    color: theme.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   pillNameSelected: {
-    color: '#4A5D4E',
+    color: theme.accent,
     fontWeight: '600',
   },
   pillWrapIndicator: {
@@ -367,12 +361,12 @@ const styles = StyleSheet.create({
   // Selected Template Details Card
   templateDetailsCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 18,
     padding: 14,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#EFE7DD',
+    borderColor: theme.border,
   },
   templateDetailsHeader: {
     flexDirection: 'row',
@@ -383,7 +377,7 @@ const styles = StyleSheet.create({
   templateName: {
     fontFamily: 'Amarna',
     fontSize: 17,
-    color: '#3E342D',
+    color: theme.text,
   },
   wrapTypeBadge: {
     paddingHorizontal: 8,
@@ -398,28 +392,28 @@ const styles = StyleSheet.create({
   templateSubtitle: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#8C6843',
+    color: theme.accent,
     marginBottom: 4,
   },
   templateDescription: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#7A8878',
+    color: theme.subtext,
     lineHeight: 17,
   },
   flowersPillsSection: {
     width: '100%',
     marginBottom: 16,
-    backgroundColor: '#FBF9F6',
+    backgroundColor: theme.border,
     padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EFE9DE',
+    borderColor: theme.border,
   },
   flowersPillsHeader: {
     fontFamily: 'Amarna',
     fontSize: 11,
-    color: '#8A9589',
+    color: theme.subtext,
     marginBottom: 8,
     textAlign: 'center',
     letterSpacing: 0.5,
@@ -433,12 +427,12 @@ const styles = StyleSheet.create({
   pillItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.card,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#ECE4DA',
+    borderColor: theme.border,
   },
   pillColorDot: {
     width: 8,
@@ -449,18 +443,18 @@ const styles = StyleSheet.create({
   pillText: {
     fontFamily: 'Amarna',
     fontSize: 11,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   admireButton: {
     flexDirection: 'row',
-    backgroundColor: '#4A5D4E',
+    backgroundColor: theme.accent,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    shadowColor: '#3E342D',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
@@ -469,7 +463,7 @@ const styles = StyleSheet.create({
   admireButtonText: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#FAF8F5',
+    color: theme.background,
   },
   // Locked State
   lockedContainer: {
@@ -482,7 +476,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#EDE8DF',
+    backgroundColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -490,13 +484,13 @@ const styles = StyleSheet.create({
   lockedTitle: {
     fontFamily: 'Amarna',
     fontSize: 22,
-    color: '#3E342D',
+    color: theme.text,
     marginBottom: 10,
   },
   lockedDescription: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#7A8878',
+    color: theme.subtext,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 16,
@@ -504,15 +498,15 @@ const styles = StyleSheet.create({
   lockedProgress: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#8C6843',
-    backgroundColor: '#F3EFE7',
+    color: theme.accent,
+    backgroundColor: theme.border,
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 14,
     marginBottom: 28,
   },
   returnButton: {
-    backgroundColor: '#4A5D4E',
+    backgroundColor: theme.accent,
     paddingVertical: 12,
     paddingHorizontal: 28,
     borderRadius: 22,
@@ -520,6 +514,6 @@ const styles = StyleSheet.create({
   returnButtonText: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#FAF8F5',
+    color: theme.background,
   },
 });

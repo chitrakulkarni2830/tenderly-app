@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   BOUQUETS: '@tenderly_bouquets',
   WHISPER_STATE: '@tenderly_whisper_state',
   DAILY_MESSAGES_STATE: '@tenderly_daily_messages_state',
+  THEME: '@tenderly_theme',
 };
 
 /**
@@ -132,12 +133,21 @@ export const StorageService = {
     await StorageService.saveData(STORAGE_KEYS.WHISPER_STATE, state);
   },
   // Daily messages state
+  // Daily messages state
   loadDailyMessagesState: async () => {
     const data = await StorageService.loadData(STORAGE_KEYS.DAILY_MESSAGES_STATE);
     return data || null;
   },
   saveDailyMessagesState: async (state) => {
     await StorageService.saveData(STORAGE_KEYS.DAILY_MESSAGES_STATE, state);
+  },
+  // User settings state
+  loadUserSettings: async () => {
+    const data = await StorageService.loadData(STORAGE_KEYS.USER_SETTINGS);
+    return data || { name: '' };
+  },
+  saveUserSettings: async (settings) => {
+    await StorageService.saveData(STORAGE_KEYS.USER_SETTINGS, settings);
   },
 };
 

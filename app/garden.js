@@ -5,9 +5,12 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StorageService } from '../services/storage';
 import { FLOWER_METADATA, isBouquetUnlocked, FLOWERS_PER_CYCLE } from '../services/garden';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function GardenScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [flowers, setFlowers] = useState([]);
   const [selectedFlower, setSelectedFlower] = useState(null);
 
@@ -28,7 +31,7 @@ export default function GardenScreen() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Feather name="arrow-left" size={24} color="#3E342D" />
+          <Feather name="arrow-left" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>The Garden</Text>
         <View style={styles.headerRight} />
@@ -57,7 +60,7 @@ export default function GardenScreen() {
             <Ionicons
               name={bouquetUnlocked ? 'sparkles' : 'lock-closed-outline'}
               size={22}
-              color={bouquetUnlocked ? '#8C6843' : '#8A9589'}
+              color={bouquetUnlocked ? theme.accent : theme.subtext}
             />
           </View>
           <View style={styles.bouquetBannerTextContainer}>
@@ -70,7 +73,7 @@ export default function GardenScreen() {
                 : `Collect 5 blooms to compose your first bouquet (${flowers.length}/${FLOWERS_PER_CYCLE} gathered).`}
             </Text>
           </View>
-          {bouquetUnlocked && <Feather name="chevron-right" size={20} color="#8C6843" />}
+          {bouquetUnlocked && <Feather name="chevron-right" size={20} color={theme.accent} />}
         </TouchableOpacity>
 
         {/* Empty State */}
@@ -105,7 +108,7 @@ export default function GardenScreen() {
                   activeOpacity={0.85}
                   onPress={() => setSelectedFlower({ ...meta, ...item })}
                 >
-                  <View style={[styles.flowerImageWrapper, { backgroundColor: meta.accentColor || '#F7F3EE' }]}>
+                  <View style={[styles.flowerImageWrapper, { backgroundColor: meta.accentColor || theme.card }]}>
                     <Image source={meta.asset} style={styles.flowerThumbnail} resizeMode="contain" />
                   </View>
 
@@ -120,7 +123,7 @@ export default function GardenScreen() {
                     </View>
                   </View>
 
-                  <Feather name="message-circle" size={16} color="#8A9589" style={styles.noteIcon} />
+                  <Feather name="message-circle" size={16} color={theme.subtext} style={styles.noteIcon} />
                 </TouchableOpacity>
               );
             })}
@@ -142,7 +145,7 @@ export default function GardenScreen() {
                 <View
                   style={[
                     styles.modalImageContainer,
-                    { backgroundColor: selectedFlower.accentColor || '#F7F3EE' },
+                    { backgroundColor: selectedFlower.accentColor || theme.card },
                   ]}
                 >
                   <Image source={selectedFlower.asset} style={styles.modalImage} resizeMode="contain" />
@@ -171,10 +174,10 @@ export default function GardenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F2EC', // Cream background
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -190,7 +193,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: 'Amarna',
     fontSize: 24,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   headerRight: {
     width: 36,
@@ -206,27 +209,27 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#8A9589',
+    color: theme.subtext,
     textAlign: 'center',
   },
   flowerCountText: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#4A5D4E',
+    color: theme.text,
     marginTop: 4,
   },
   bouquetBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EBE7DE',
+    backgroundColor: theme.border,
     borderRadius: 16,
     padding: 16,
     marginVertical: 12,
   },
   bouquetBannerUnlocked: {
-    backgroundColor: '#FAF3E7',
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: '#E8D6BF',
+    borderColor: theme.border,
   },
   bouquetBannerIcon: {
     marginRight: 12,
@@ -237,17 +240,17 @@ const styles = StyleSheet.create({
   bouquetBannerTitle: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#657064',
+    color: theme.subtext,
     marginBottom: 2,
   },
   bouquetBannerTitleUnlocked: {
-    color: '#8C6843',
+    color: theme.accent,
     fontWeight: '600',
   },
   bouquetBannerSubtext: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#8A9589',
+    color: theme.subtext,
     lineHeight: 16,
   },
   emptyContainer: {
@@ -265,14 +268,14 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontFamily: 'Amarna',
     fontSize: 20,
-    color: '#4A5D4E',
+    color: theme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyDescription: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#8A9589',
+    color: theme.subtext,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -283,11 +286,11 @@ const styles = StyleSheet.create({
   flowerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF8F5',
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#EAE5DB',
+    borderColor: theme.border,
   },
   flowerImageWrapper: {
     width: 64,
@@ -307,12 +310,12 @@ const styles = StyleSheet.create({
   flowerCardName: {
     fontFamily: 'Amarna',
     fontSize: 18,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   flowerCardBotanical: {
     fontFamily: 'Amarna',
     fontSize: 12,
-    color: '#8A9589',
+    color: theme.subtext,
     fontStyle: 'italic',
     marginBottom: 4,
   },
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   meaningTag: {
-    backgroundColor: '#EBE7DE',
+    backgroundColor: theme.border,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -330,12 +333,12 @@ const styles = StyleSheet.create({
   meaningTagText: {
     fontFamily: 'Amarna',
     fontSize: 11,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   flowerDate: {
     fontFamily: 'Amarna',
     fontSize: 11,
-    color: '#A0ACA0',
+    color: theme.subtext,
   },
   noteIcon: {
     marginLeft: 8,
@@ -343,19 +346,19 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(62, 52, 45, 0.45)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   modalCard: {
     width: '100%',
-    backgroundColor: '#FAF8F5',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#EAE5DB',
+    borderColor: theme.border,
   },
   modalImageContainer: {
     width: 120,
@@ -372,41 +375,41 @@ const styles = StyleSheet.create({
   modalFlowerName: {
     fontFamily: 'Amarna',
     fontSize: 22,
-    color: '#4A5D4E',
+    color: theme.text,
   },
   modalBotanicalName: {
     fontFamily: 'Amarna',
     fontSize: 14,
-    color: '#8A9589',
+    color: theme.subtext,
     fontStyle: 'italic',
     marginTop: 2,
   },
   modalMeaning: {
     fontFamily: 'Amarna',
     fontSize: 13,
-    color: '#8C6843',
+    color: theme.accent,
     marginTop: 4,
     marginBottom: 16,
   },
   messageBox: {
-    backgroundColor: '#F5F0E6',
+    backgroundColor: theme.background,
     borderRadius: 16,
     padding: 16,
     width: '100%',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#ECE4D4',
+    borderColor: theme.border,
   },
   modalMessageText: {
     fontFamily: 'Amarna',
     fontSize: 16,
-    color: '#4A5D4E',
+    color: theme.text,
     textAlign: 'center',
     lineHeight: 24,
     fontStyle: 'italic',
   },
   modalCloseButton: {
-    backgroundColor: '#4A5D4E',
+    backgroundColor: theme.accent,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 24,
@@ -414,6 +417,6 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     fontFamily: 'Amarna',
     fontSize: 15,
-    color: '#FAF8F5',
+    color: theme.background,
   },
 });
