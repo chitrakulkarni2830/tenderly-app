@@ -3,6 +3,15 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
+import { StorageService, getGrowthStage } from '../services/storage';
+
+const CLOVER_STAGE_IMAGES = {
+  1: require('../assets/images/clover_pot.png'),      // Sprout
+  2: require('../assets/images/clover_young.png'),    // Young
+  3: require('../assets/images/clover_grown.png'),    // Grown
+  4: require('../assets/images/clover_budding.png'),  // Budding
+  5: require('../assets/images/clover_blossomed.png'),// Blossomed
+};
 
 const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPress }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -38,15 +47,30 @@ const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPre
 
 export default function Home() {
   const [activeIcon, setActiveIcon] = useState(null);
+  const [careCount, setCareCount] = useState(0);
   const timeoutRef = useRef(null);
   const heartLottieRef = useRef(null);
   const waterLottieRef = useRef(null);
   const sunshineLottieRef = useRef(null);
   const nourishLottieRef = useRef(null);
 
+  // Restore persisted Clover care count & growth stage on app launch
+  useEffect(() => {
+    let isMounted = true;
+    StorageService.loadCloverState().then((state) => {
+      if (isMounted && state && typeof state.careCount === 'number') {
+        setCareCount(state.careCount);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleIconPress = (iconName) => {
     setActiveIcon(iconName);
     
+    // Play corresponding Lottie animation
     if (iconName === 'heart') {
       heartLottieRef.current?.reset();
       heartLottieRef.current?.play();
@@ -60,6 +84,13 @@ export default function Home() {
       nourishLottieRef.current?.reset();
       nourishLottieRef.current?.play();
     }
+
+    // Every completed care action counts as exactly 1 care action (+1)
+    setCareCount((prev) => {
+      const nextCount = prev + 1;
+      StorageService.saveCloverState(nextCount);
+      return nextCount;
+    });
     
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
@@ -67,6 +98,8 @@ export default function Home() {
       setActiveIcon(null);
     }, 1000); // Stays active for 1 second
   };
+
+  const currentStage = getGrowthStage(careCount);
   return (
     <SafeAreaView style={styles.container}>
       
@@ -141,7 +174,7 @@ export default function Home() {
 
         {/* Clover Plant in Foreground */}
         <Image 
-          source={require('../assets/images/clover_pot.png')} 
+          source={CLOVER_STAGE_IMAGES[currentStage]} 
           style={styles.cloverImage}
           resizeMode="contain"
         />
