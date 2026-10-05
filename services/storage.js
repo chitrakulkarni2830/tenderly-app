@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   GARDEN_FLOWERS: '@tenderly_garden_flowers',
   BOUQUETS: '@tenderly_bouquets',
   WHISPER_STATE: '@tenderly_whisper_state',
+  DAILY_MESSAGES_STATE: '@tenderly_daily_messages_state',
 };
 
 /**
@@ -129,6 +130,14 @@ export const StorageService = {
   },
   saveWhisperState: async (state) => {
     await StorageService.saveData(STORAGE_KEYS.WHISPER_STATE, state);
+  },
+  // Daily messages state
+  loadDailyMessagesState: async () => {
+    const data = await StorageService.loadData(STORAGE_KEYS.DAILY_MESSAGES_STATE);
+    return data || null;
+  },
+  saveDailyMessagesState: async (state) => {
+    await StorageService.saveData(STORAGE_KEYS.DAILY_MESSAGES_STATE, state);
   },
 };
 

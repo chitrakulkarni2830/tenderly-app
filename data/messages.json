@@ -1,0 +1,82 @@
+{
+  "water": {
+    "requests": [
+      "A little thirsty today… could you give me some water?",
+      "My leaves are feeling a bit droopy. I think I need a drink.",
+      "Could I have some water, please? 💧",
+      "I think I’ve been waiting for my little drink…",
+      "Water, please? I’m feeling a little parched.",
+      "My soil feels a little dry today.",
+      "Could you give me a sip? I’ll feel much happier."
+    ],
+    "replies": [
+      "Ahh, that feels better. Now go have some water too, okay?",
+      "Thank you. 💧 Your turn now — take a little sip for yourself.",
+      "All refreshed! And hey… when was the last time *you* had some water?",
+      "That was lovely. Please remember to keep yourself hydrated too.",
+      "Much better. Now let me remind you: plants aren’t the only ones who need water. 🤍",
+      "Thank you for taking care of me. Now take care of you, too — drink some water.",
+      "Happy and hydrated again. You should be, too. 🌱"
+    ]
+  },
+  "food": {
+    "requests": [
+      "I think I could use a little nourishment today.",
+      "Could you give me something good to grow with?",
+      "I’m feeling a little hungry…",
+      "A little nourishment would make me very happy.",
+      "I think it’s time for something nourishing.",
+      "Could I have a little food, please?",
+      "I need some good things to help me grow."
+    ],
+    "replies": [
+      "Mmm, thank you. Now please remember to feed yourself something good too.",
+      "That helped me grow. I hope you give yourself something nourishing today, too.",
+      "All fed! Now… have you eaten something today?",
+      "Thank you for taking care of me. Please don’t forget to take care of your tummy, too. 🤍",
+      "Feeling nourished again. Your turn — go find yourself something good to eat.",
+      "That was just what I needed. I hope you’re giving yourself what you need, too.",
+      "I’m growing because you feed me. Make sure you’re giving yourself enough fuel, too. 🌱"
+    ]
+  },
+  "light": {
+    "requests": [
+      "Could you give me a little sunshine today?",
+      "I’d love to feel some warm light on my leaves.",
+      "It feels a little dim here… can I have some sunshine?",
+      "A little light would make me very happy.",
+      "Could we find me a sunny little spot?",
+      "I think I’m ready for some sunshine.",
+      "My leaves are asking for a little light today. ☀️"
+    ],
+    "replies": [
+      "Mmm, that feels lovely. You should get a little sunshine too.",
+      "Thank you. Now maybe step outside and let the sun find you, too?",
+      "All warmed up! A little daylight might do you some good, too. 🤍",
+      "That was nice. Remember, you need a little light sometimes, too.",
+      "Feeling brighter already. I hope you find a little brightness for yourself today.",
+      "Thank you for finding me some sunshine. Now go borrow a little for yourself.",
+      "Look at me soaking it all in. You should go get some sunshine too. 🌱"
+    ]
+  },
+  "love": {
+    "requests": [
+      "Could I have a little love today?",
+      "I think I need some extra love from you.",
+      "Can you give me a little attention? I missed you.",
+      "I could really use a gentle little moment with you.",
+      "Will you spend a little time with me?",
+      "I’m feeling a little lonely today… stay with me for a moment?",
+      "Could you give me some love? I promise I’ll keep growing."
+    ],
+    "replies": [
+      "Thank you for loving me. Now be a little gentle with yourself, too.",
+      "That made me so happy. I hope you’re giving yourself that same kindness.",
+      "I feel very loved. I hope you remember that you deserve love too. 🤍",
+      "Thank you for staying with me. Don’t forget to stay with yourself, too.",
+      "That was lovely. Now take a little moment to be kind to yourself.",
+      "I’m feeling better already. I hope you are, too.",
+      "You take such good care of me. Please remember that you deserve the same care. 🌱"
+    ]
+  }
+}

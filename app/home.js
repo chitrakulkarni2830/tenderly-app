@@ -57,8 +57,12 @@ export default function Home() {
   const [showBlossomModal, setShowBlossomModal] = useState(false);
   const [showAudioControls, setShowAudioControls] = useState(false);
   const [currentWhisper, setCurrentWhisper] = useState('You are allowed to\nhave a slow day 🫶🏻');
+  const [dailyMessages, setDailyMessages] = useState(null);
+  const [cloverSpeech, setCloverSpeech] = useState(null);
+  const [isSpeechVisible, setIsSpeechVisible] = useState(false);
 
   const timeoutRef = useRef(null);
+  const speechTimeoutRef = useRef(null);
   const heartLottieRef = useRef(null);
   const waterLottieRef = useRef(null);
   const sunshineLottieRef = useRef(null);
@@ -108,7 +112,16 @@ export default function Home() {
       let state = await StorageService.loadWhisperState();
       const allWhispers = require('../data/whispers.json');
       
-      if (!state.sequence || state.sequence.length === 0 || state.currentIndex >= state.sequence.length) {
+      const today = new Date().toDateString(); // e.g., "Mon Oct 05 2026"
+      let needsAdvance = false;
+      
+      // If we haven't seen a whisper today, we need to advance the index
+      if (state.lastShownDate !== today) {
+        needsAdvance = true;
+      }
+      
+      // If we don't have a sequence, OR we need to advance but we're at the end of the sequence
+      if (!state.sequence || state.sequence.length === 0 || (needsAdvance && state.currentIndex + 1 >= state.sequence.length)) {
         // Generate a new shuffled sequence
         const newSequence = [...allWhispers];
         for (let i = newSequence.length - 1; i > 0; i--) {
@@ -124,13 +137,18 @@ export default function Home() {
           }
         }
         
-        state = { sequence: newSequence, currentIndex: 0 };
+        // Start fresh with the new sequence for today
+        state = { sequence: newSequence, currentIndex: 0, lastShownDate: today };
+        needsAdvance = false; 
+      }
+      
+      // Advance to the next whisper if it's a new day (and we didn't just generate a new sequence)
+      if (needsAdvance && state.sequence.length > 0) {
+        state.currentIndex += 1;
+        state.lastShownDate = today;
       }
       
       setCurrentWhisper(state.sequence[state.currentIndex]);
-      
-      // Advance index for the next app launch
-      state.currentIndex += 1;
       await StorageService.saveWhisperState(state);
     };
     
@@ -148,22 +166,150 @@ export default function Home() {
     }
   }, [careCount, pendingFlower]);
 
+  // Load and manage daily messages
+  useEffect(() => {
+    let isMounted = true;
+    let intervalId = null;
+    
+    const initDailyMessages = async () => {
+      let state = await StorageService.loadDailyMessagesState();
+      const today = new Date().toDateString();
+      
+      if (!state || state.date !== today) {
+        state = {
+          date: today,
+          selections: {
+            water: { index: Math.floor(Math.random() * 7), completed: false },
+            food: { index: Math.floor(Math.random() * 7), completed: false },
+            light: { index: Math.floor(Math.random() * 7), completed: false },
+            love: { index: Math.floor(Math.random() * 7), completed: false },
+          }
+        };
+        await StorageService.saveDailyMessagesState(state);
+      }
+      
+      if (isMounted) {
+        setDailyMessages(state);
+      }
+    };
+    
+    initDailyMessages();
+    
+    // Check every minute if midnight has passed
+    intervalId = setInterval(() => {
+      const today = new Date().toDateString();
+      setDailyMessages(prevState => {
+        if (prevState && prevState.date !== today) {
+          initDailyMessages();
+        }
+        return prevState;
+      });
+    }, 60000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const isReplyVisibleRef = useRef(false);
+
+  // Cycle uncompleted Clover requests
+  useEffect(() => {
+    if (!dailyMessages) return;
+    
+    const cycleRequests = () => {
+      if (isReplyVisibleRef.current) return;
+      
+      const uncompletedCategories = Object.keys(dailyMessages.selections).filter(
+        (cat) => !dailyMessages.selections[cat].completed
+      );
+      
+      if (uncompletedCategories.length === 0) return;
+      
+      const randomCategory = uncompletedCategories[Math.floor(Math.random() * uncompletedCategories.length)];
+      const msgIndex = dailyMessages.selections[randomCategory].index;
+      const MESSAGE_LIBRARY = require('../data/messages.json');
+      const requestText = MESSAGE_LIBRARY[randomCategory].requests[msgIndex];
+      
+      setCloverSpeech(requestText);
+      setIsSpeechVisible(true);
+      
+      clearTimeout(speechTimeoutRef.current);
+      speechTimeoutRef.current = setTimeout(() => {
+        if (!isReplyVisibleRef.current) {
+          setIsSpeechVisible(false);
+        }
+      }, 5000);
+    };
+    
+    const intervalId = setInterval(cycleRequests, 12000);
+    const initialTimeoutId = setTimeout(cycleRequests, 2000);
+    
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(initialTimeoutId);
+    };
+  }, [dailyMessages]);
+
+  const markActionCompleted = async (category) => {
+    if (!dailyMessages || dailyMessages.selections[category].completed) return;
+    
+    const newState = {
+      ...dailyMessages,
+      selections: {
+        ...dailyMessages.selections,
+        [category]: {
+          ...dailyMessages.selections[category],
+          completed: true
+        }
+      }
+    };
+    setDailyMessages(newState);
+    await StorageService.saveDailyMessagesState(newState);
+    
+    // Show reply
+    const msgIndex = dailyMessages.selections[category].index;
+    const MESSAGE_LIBRARY = require('../data/messages.json');
+    const replyText = MESSAGE_LIBRARY[category].replies[msgIndex];
+    
+    isReplyVisibleRef.current = true;
+    clearTimeout(speechTimeoutRef.current);
+    setCloverSpeech(replyText);
+    setIsSpeechVisible(true);
+    
+    speechTimeoutRef.current = setTimeout(() => {
+      setIsSpeechVisible(false);
+      isReplyVisibleRef.current = false;
+    }, 6000);
+  };
+
   const handleIconPress = (iconName) => {
     setActiveIcon(iconName);
+    
+    let category = null;
     
     // Play corresponding Lottie animation
     if (iconName === 'heart') {
       heartLottieRef.current?.reset();
       heartLottieRef.current?.play();
+      category = 'love';
     } else if (iconName === 'drop') {
       waterLottieRef.current?.reset();
       waterLottieRef.current?.play();
+      category = 'water';
     } else if (iconName === 'sun') {
       sunshineLottieRef.current?.reset();
       sunshineLottieRef.current?.play();
+      category = 'light';
     } else if (iconName === 'sparkles') {
       nourishLottieRef.current?.reset();
       nourishLottieRef.current?.play();
+      category = 'food';
+    }
+
+    if (category) {
+      markActionCompleted(category);
     }
 
     // Every completed care action counts as exactly 1 care action (+1)
@@ -300,6 +446,13 @@ export default function Home() {
 
         {/* Plant Display Container */}
         <View style={styles.plantsRow}>
+          {isSpeechVisible && cloverSpeech && (
+            <Animated.View style={styles.speechBubble}>
+              <Text style={styles.speechText}>{cloverSpeech}</Text>
+              <View style={styles.speechTriangle} />
+            </Animated.View>
+          )}
+          
           {/* Clover Plant in Foreground */}
           <Image 
             source={CLOVER_STAGE_IMAGES[currentStage]} 
@@ -689,5 +842,43 @@ const styles = StyleSheet.create({
     fontFamily: 'Amarna',
     fontSize: 15,
     color: '#FAF8F5',
+  },
+  speechBubble: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    maxWidth: '80%',
+    position: 'absolute',
+    top: -60,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 10,
+  },
+  speechText: {
+    fontFamily: 'InstrumentSerif_400Regular_Italic',
+    fontSize: 20,
+    color: '#3E342D',
+    textAlign: 'center',
+  },
+  speechTriangle: {
+    position: 'absolute',
+    bottom: -8,
+    left: '50%',
+    marginLeft: -8,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 8,
+    borderStyle: 'solid',
+    backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#fff',
   },
 });
