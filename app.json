@@ -13,10 +13,8 @@
     "android": {
       "package": "com.tenderly.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FAF5EA"
       }
     },
     "web": {
@@ -27,6 +25,13 @@
       "expo-status-bar",
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "297db80b-9416-414a-a2fb-55468c87a53f"
+      }
+    },
+    "owner": "chitrakulkarni2830"
   }
 }
