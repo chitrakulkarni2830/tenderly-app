@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StorageService, getGrowthStage } from '../services/storage';
+import { isBlossomReady, selectNextFlower, FLOWER_METADATA } from '../services/garden';
+import { useAudio } from '../contexts/AudioContext';
 
 const CLOVER_STAGE_IMAGES = {
   1: require('../assets/images/clover_pot.png'),      // Sprout
@@ -46,13 +49,40 @@ const AnimatedIcon = ({ outlineSource, filledSource, iconName, activeIcon, onPre
 };
 
 export default function Home() {
+  const router = useRouter();
+  const { isPlaying, togglePlayPause, playNextTrack, playPreviousTrack } = useAudio();
   const [activeIcon, setActiveIcon] = useState(null);
   const [careCount, setCareCount] = useState(0);
+  const [pendingFlower, setPendingFlower] = useState(null);
+  const [showBlossomModal, setShowBlossomModal] = useState(false);
+
   const timeoutRef = useRef(null);
   const heartLottieRef = useRef(null);
   const waterLottieRef = useRef(null);
   const sunshineLottieRef = useRef(null);
   const nourishLottieRef = useRef(null);
+
+  // Floating bounce animation for the blossom note
+  const noteFloatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(noteFloatAnim, {
+          toValue: -6,
+          duration: 1600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(noteFloatAnim, {
+          toValue: 0,
+          duration: 1600,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    floatLoop.start();
+    return () => floatLoop.stop();
+  }, []);
 
   // Restore persisted Clover care count & growth stage on app launch
   useEffect(() => {
@@ -60,12 +90,26 @@ export default function Home() {
     StorageService.loadCloverState().then((state) => {
       if (isMounted && state && typeof state.careCount === 'number') {
         setCareCount(state.careCount);
+        if (state.pendingFlower) {
+          setPendingFlower(state.pendingFlower);
+        }
       }
     });
     return () => {
       isMounted = false;
     };
   }, []);
+
+  // Handle blossoming logic when threshold (21 care actions) is reached
+  useEffect(() => {
+    if (isBlossomReady(careCount) && !pendingFlower) {
+      StorageService.loadGardenFlowers().then((history) => {
+        const nextFlower = selectNextFlower(history);
+        setPendingFlower(nextFlower);
+        StorageService.saveCloverState(careCount, { pendingFlower: nextFlower });
+      });
+    }
+  }, [careCount, pendingFlower]);
 
   const handleIconPress = (iconName) => {
     setActiveIcon(iconName);
@@ -88,7 +132,7 @@ export default function Home() {
     // Every completed care action counts as exactly 1 care action (+1)
     setCareCount((prev) => {
       const nextCount = prev + 1;
-      StorageService.saveCloverState(nextCount);
+      StorageService.saveCloverState(nextCount, { pendingFlower });
       return nextCount;
     });
     
@@ -99,19 +143,48 @@ export default function Home() {
     }, 1000); // Stays active for 1 second
   };
 
+  // Collect flower interaction: adds to garden and resets Clover to Stage 1 Sprout
+  const handleCollectFlower = async () => {
+    if (!pendingFlower) return;
+    await StorageService.collectFlowerAndResetClover({
+      flowerType: pendingFlower.flowerType,
+      cycle: pendingFlower.cycle,
+      cyclePosition: pendingFlower.cyclePosition,
+    });
+    setShowBlossomModal(false);
+    setPendingFlower(null);
+    setCareCount(0); // Clover resets to Stage 1!
+  };
+
   const currentStage = getGrowthStage(careCount);
+  const blossoming = isBlossomReady(careCount) && pendingFlower;
+  const flowerMeta = blossoming ? (FLOWER_METADATA[pendingFlower.flowerType] || FLOWER_METADATA.rose) : null;
+
   return (
     <SafeAreaView style={styles.container}>
       
       {/* Top Navigation Row */}
       <View style={styles.navRow}>
-        <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity 
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => router.push('/garden')}
+          accessibilityLabel="Open Garden"
+        >
           <Feather name="menu" size={24} color="#3E342D" />
         </TouchableOpacity>
         
-        <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="musical-note" size={24} color="#3E342D" />
-        </TouchableOpacity>
+        {/* Audio Controls */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+          <TouchableOpacity onPress={playPreviousTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="play-skip-back" size={20} color="#3E342D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={togglePlayPause} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name={isPlaying ? "pause" : "play"} size={24} color="#3E342D" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={playNextTrack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="play-skip-forward" size={20} color="#3E342D" />
+          </TouchableOpacity>
+        </View>
         
         <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="settings-outline" size={24} color="#3E342D" />
@@ -120,10 +193,12 @@ export default function Home() {
 
       {/* Greeting Text */}
       <View style={styles.greetingContainer}>
-        <Text style={styles.greetingText}>“Oh! A new friend 🫶🏻🌱”</Text>
+        <Text style={styles.greetingText}>
+          {blossoming ? '“Look what we grew together... 🌸”' : '“Oh! A new friend 🫶🏻🌱”'}
+        </Text>
       </View>
 
-      {/* Main Clover Image Container */}
+      {/* Main Clover & Blossom Container */}
       <View style={styles.imageContainer}>
         {/* Animations Layer (Positioned behind clover, visible rising above and around it) */}
         <View style={styles.lottieContainer} pointerEvents="none">
@@ -172,12 +247,51 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Clover Plant in Foreground */}
-        <Image 
-          source={CLOVER_STAGE_IMAGES[currentStage]} 
-          style={styles.cloverImage}
-          resizeMode="contain"
-        />
+        {/* Plant Display Container */}
+        <View style={styles.plantsRow}>
+          {/* Clover Plant in Foreground */}
+          <Image 
+            source={CLOVER_STAGE_IMAGES[currentStage]} 
+            style={[styles.cloverImage, blossoming && styles.cloverImageBlossom]}
+            resizeMode="contain"
+          />
+
+          {/* Blossomed Collectible Flower */}
+          {blossoming && flowerMeta && (
+            <Animated.View style={styles.blossomFlowerWrapper}>
+              <Image
+                source={flowerMeta.asset}
+                style={styles.blossomFlowerImage}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          )}
+        </View>
+
+        {/* Blossom Note Card (gentle discoverable note beside the bloom) */}
+        {blossoming && (
+          <TouchableOpacity
+            activeOpacity={0.88}
+            onPress={() => setShowBlossomModal(true)}
+            style={styles.noteTouchArea}
+          >
+            <Animated.View
+              style={[
+                styles.noteCardContainer,
+                { transform: [{ translateY: noteFloatAnim }] },
+              ]}
+            >
+              <Image
+                source={require('../assets/images/blossom_note.png')}
+                style={styles.blossomNoteImage}
+                resizeMode="contain"
+              />
+              <View style={styles.noteCalloutPill}>
+                <Text style={styles.noteCalloutText}>a note for you ✉️</Text>
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Action Icons Row */}
@@ -214,10 +328,63 @@ export default function Home() {
 
       {/* Whisper Text Section */}
       <View style={styles.whisperContainer}>
-        <Text style={styles.whisperSubtitle}>a little whisper ✨</Text>
-        <Text style={styles.whisperText}>You are allowed to</Text>
-        <Text style={styles.whisperText}>have a slow day 🫶🏻</Text>
+        <Text style={styles.whisperSubtitle}>
+          {blossoming ? 'something special has grown ✨' : 'a little whisper ✨'}
+        </Text>
+        <Text style={styles.whisperText}>
+          {blossoming ? 'Tap the little note' : 'You are allowed to'}
+        </Text>
+        <Text style={styles.whisperText}>
+          {blossoming ? 'to receive your bloom 🫶🏻' : 'have a slow day 🫶🏻'}
+        </Text>
       </View>
+
+      {/* Blossom Discovery / Achievement Modal */}
+      <Modal
+        visible={showBlossomModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBlossomModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            {flowerMeta && (
+              <>
+                <Text style={styles.modalSubHeader}>A tender bloom has opened</Text>
+                
+                <View
+                  style={[
+                    styles.modalImageContainer,
+                    { backgroundColor: flowerMeta.accentColor || '#F7F3EE' },
+                  ]}
+                >
+                  <Image
+                    source={flowerMeta.asset}
+                    style={styles.modalFlowerImage}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                <Text style={styles.modalFlowerName}>{flowerMeta.name}</Text>
+                <Text style={styles.modalBotanicalName}>{flowerMeta.botanicalName}</Text>
+                <Text style={styles.modalMeaning}>{flowerMeta.meaning}</Text>
+
+                <View style={styles.messageBox}>
+                  <Text style={styles.modalMessageText}>“{flowerMeta.message}”</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.modalCollectButton}
+                  activeOpacity={0.85}
+                  onPress={handleCollectFlower}
+                >
+                  <Text style={styles.modalCollectButtonText}>Place in Garden & Begin Anew 🌱</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
       
     </SafeAreaView>
   );
@@ -238,19 +405,21 @@ const styles = StyleSheet.create({
   },
   greetingContainer: {
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 24,
+    paddingHorizontal: 20,
   },
   greetingText: {
     fontFamily: 'Amarna',
     fontSize: 22,
     color: '#4A5D4E',
+    textAlign: 'center',
   },
   imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 10,
     position: 'relative',
   },
   lottieContainer: {
@@ -284,16 +453,68 @@ const styles = StyleSheet.create({
     height: 320,
     transform: [{ translateY: -15 }, { scale: 1.35 }],
   },
+  plantsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
   cloverImage: {
     width: 250,
     height: 250,
     zIndex: 2,
   },
+  cloverImageBlossom: {
+    width: 210,
+    height: 210,
+    marginRight: -20,
+  },
+  blossomFlowerWrapper: {
+    zIndex: 3,
+    marginLeft: -10,
+  },
+  blossomFlowerImage: {
+    width: 140,
+    height: 180,
+  },
+  noteTouchArea: {
+    position: 'absolute',
+    bottom: -10,
+    right: 36,
+    zIndex: 10,
+    alignItems: 'center',
+  },
+  noteCardContainer: {
+    alignItems: 'center',
+  },
+  blossomNoteImage: {
+    width: 72,
+    height: 72,
+  },
+  noteCalloutPill: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginTop: -4,
+    borderWidth: 1,
+    borderColor: '#E7DFD5',
+    shadowColor: '#3E342D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  noteCalloutText: {
+    fontFamily: 'Amarna',
+    fontSize: 12,
+    color: '#6B7A6A',
+  },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 50,
-    marginBottom: 60,
+    marginBottom: 50,
   },
   iconWrapper: {
     width: 40,
@@ -318,13 +539,107 @@ const styles = StyleSheet.create({
     fontFamily: 'Amarna',
     fontSize: 16,
     color: '#8A9589',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   whisperText: {
     fontFamily: 'Amarna',
-    fontSize: 24,
+    fontSize: 22,
     color: '#4A5D4E',
     textAlign: 'center',
-    lineHeight: 34,
-  }
+    lineHeight: 32,
+  },
+  // Blossom Achievement Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(62, 52, 45, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: '#FCFAF7',
+    borderRadius: 28,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    shadowColor: '#3E342D',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#EDE7DE',
+  },
+  modalSubHeader: {
+    fontFamily: 'Amarna',
+    fontSize: 14,
+    color: '#8A9589',
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  modalImageContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  modalFlowerImage: {
+    width: 110,
+    height: 110,
+  },
+  modalFlowerName: {
+    fontFamily: 'Amarna',
+    fontSize: 24,
+    color: '#3E342D',
+    marginBottom: 2,
+  },
+  modalBotanicalName: {
+    fontFamily: 'Amarna',
+    fontSize: 13,
+    color: '#8A9589',
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  modalMeaning: {
+    fontFamily: 'Amarna',
+    fontSize: 13,
+    color: '#6B7A6A',
+    backgroundColor: '#F0ECE4',
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  messageBox: {
+    backgroundColor: '#F7F4EE',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 3,
+    borderLeftColor: '#C4B49F',
+    width: '100%',
+  },
+  modalMessageText: {
+    fontFamily: 'Amarna',
+    fontSize: 15,
+    color: '#4A5D4E',
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  modalCollectButton: {
+    backgroundColor: '#4A5D4E',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalCollectButtonText: {
+    fontFamily: 'Amarna',
+    fontSize: 15,
+    color: '#FAF8F5',
+  },
 });

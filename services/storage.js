@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const STORAGE_KEYS = {
   CLOVER_STATE: '@tenderly_clover_state',
   USER_SETTINGS: '@tenderly_user_settings',
+  GARDEN_FLOWERS: '@tenderly_garden_flowers',
+  BOUQUETS: '@tenderly_bouquets',
 };
 
 /**
@@ -12,6 +14,7 @@ export const STORAGE_KEYS = {
  * Stage 3: 7 total actions (7 - 11)
  * Stage 4: 12 total actions (12 - 17)
  * Stage 5: 18 total actions (18+)
+ * Blossom Ready: 21 actions (Stage 5 + 3 additional actions)
  */
 export const GROWTH_THRESHOLDS = {
   STAGE_1: 0,
@@ -19,6 +22,7 @@ export const GROWTH_THRESHOLDS = {
   STAGE_3: 7,
   STAGE_4: 12,
   STAGE_5: 18,
+  BLOSSOM_READY: 21,
 };
 
 /**
@@ -36,7 +40,7 @@ export const getGrowthStage = (careCount) => {
 
 /**
  * Local storage abstraction for persisting application state.
- * Includes Clover state, selected theme, and user preferences.
+ * Includes Clover state, Garden flower collection, selected theme, and user preferences.
  */
 export const StorageService = {
   saveData: async (key, value) => {
@@ -55,11 +59,12 @@ export const StorageService = {
       return null;
     }
   },
-  saveCloverState: async (careCount) => {
+  saveCloverState: async (careCount, extraState = {}) => {
     const stage = getGrowthStage(careCount);
     await StorageService.saveData(STORAGE_KEYS.CLOVER_STATE, {
       careCount,
       stage,
+      ...extraState,
       updatedAt: new Date().toISOString(),
     });
   },
@@ -69,9 +74,52 @@ export const StorageService = {
       return { careCount: 0, stage: 1 };
     }
     return {
+      ...data,
       careCount: data.careCount,
       stage: getGrowthStage(data.careCount),
     };
-  }
+  },
+  // Garden flower collection persistence
+  loadGardenFlowers: async () => {
+    const list = await StorageService.loadData(STORAGE_KEYS.GARDEN_FLOWERS);
+    return Array.isArray(list) ? list : [];
+  },
+  addGardenFlower: async (flower) => {
+    const existing = await StorageService.loadGardenFlowers();
+    const updated = [
+      ...existing,
+      {
+        ...flower,
+        id: flower.id || `flower_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        collectedAt: flower.collectedAt || new Date().toISOString(),
+      },
+    ];
+    await StorageService.saveData(STORAGE_KEYS.GARDEN_FLOWERS, updated);
+    return updated;
+  },
+  // Resets Clover to Sprouting (careCount = 0) while permanently keeping Garden flowers
+  collectFlowerAndResetClover: async (flower) => {
+    await StorageService.addGardenFlower(flower);
+    await StorageService.saveCloverState(0, { pendingFlower: null });
+    return { careCount: 0, stage: 1 };
+  },
+  // Bouquet persistence
+  loadBouquets: async () => {
+    const data = await StorageService.loadData(STORAGE_KEYS.BOUQUETS);
+    return Array.isArray(data) ? data : [];
+  },
+  saveBouquet: async (bouquet) => {
+    const existing = await StorageService.loadBouquets();
+    const updated = [
+      ...existing,
+      {
+        ...bouquet,
+        id: bouquet.id || `bouquet_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    await StorageService.saveData(STORAGE_KEYS.BOUQUETS, updated);
+    return updated;
+  },
 };
 

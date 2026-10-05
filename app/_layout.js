@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { AudioProvider } from '../contexts/AudioContext';
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -22,13 +23,18 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ animation: 'fade' }} />
-      <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
-      <Stack.Screen name="home" options={{ animation: 'fade' }} />
-      <Stack.Screen name="theme" />
-      <Stack.Screen name="settings" />
-      <Stack.Screen name="about" />
-    </Stack>
+    <AudioProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ animation: 'fade' }} />
+        <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="home" options={{ animation: 'fade' }} />
+        <Stack.Screen name="theme" />
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="about" />
+        <Stack.Screen name="garden" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bouquet" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bouquet-showcase" options={{ animation: 'fade' }} />
+      </Stack>
+    </AudioProvider>
   );
 }
