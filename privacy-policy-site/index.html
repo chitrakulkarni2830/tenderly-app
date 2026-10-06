@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenderly — Privacy Policy</title>
+  <meta name="description" content="Official Privacy Policy for the Tenderly mobile application. Tenderly is a calm, local-first botanical companion app that collects zero personal data.">
+  <link rel="icon" type="image/png" href="icon.png">
+
+  <!-- Google Fonts for Botanical Aesthetics -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #FFF9ED;
+      --card-bg: #FFFFFF;
+      --card-border: rgba(58, 90, 64, 0.14);
+      --accent: #3A5A40;
+      --accent-soft: #EBF2EA;
+      --accent-deep: #253C2A;
+      --text-main: #27382B;
+      --text-muted: #5C6E60;
+      --text-light: #7E9082;
+      --shadow: 0 10px 30px rgba(58, 90, 64, 0.06);
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.65;
+      padding: 2rem 1.25rem 4rem;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(209, 255, 199, 0.35) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(245, 230, 211, 0.5) 0%, transparent 45%);
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    /* Header styling */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .app-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(58, 90, 64, 0.15);
+      margin-bottom: 1rem;
+      display: inline-block;
+      border: 1px solid rgba(58, 90, 64, 0.12);
+    }
+
+    h1 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 2.5rem;
+      font-weight: 500;
+      color: var(--accent-deep);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .philosophy {
+      font-family: 'Newsreader', Georgia, serif;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .badge-bar .dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Document card */
+    .document-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 2.75rem 2.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 640px) {
+      .document-card {
+        padding: 1.75rem 1.25rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    .meta-box {
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .meta-box strong {
+      color: var(--text-main);
+    }
+
+    /* Typography & Sections */
+    h2 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--accent-deep);
+      margin-top: 2rem;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    h2 .icon {
+      font-size: 1.2rem;
+    }
+
+    p {
+      color: var(--text-main);
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .highlight-card {
+      background-color: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+      color: var(--accent-deep);
+    }
+
+    .highlight-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Lists */
+    ul {
+      list-style: none;
+      margin-bottom: 1.25rem;
+    }
+
+    li {
+      position: relative;
+      padding-left: 1.6rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.97rem;
+      color: var(--text-main);
+    }
+
+    li::before {
+      content: "•";
+      position: absolute;
+      left: 0.5rem;
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .cross-list li::before {
+      content: "✕";
+      left: 0.4rem;
+      color: #9B5C5C;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #F8F4EB;
+      color: var(--accent-deep);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(58, 90, 64, 0.08);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      background: rgba(58, 90, 64, 0.08);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--accent-deep);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <img src="icon.png" alt="Tenderly App Icon" class="app-icon">
+      <h1>Tenderly</h1>
+      <p class="philosophy">“Take care of me to take care of you”</p>
+      <div class="badge-bar">
+        <span class="dot"></span>
+        <span>Official Privacy Policy</span>
+      </div>
+    </header>
+
+    <main class="document-card">
+      <div class="meta-box">
+        <div><strong>Application:</strong> Tenderly (Android / iOS)</div>
+        <div><strong>Package ID:</strong> <code>com.tenderly.app</code></div>
+        <div><strong>Effective Date:</strong> October 6, 2026</div>
+      </div>
+
+      <section>
+        <h2><span class="icon">🌱</span> 1. Your Space, Your Privacy</h2>
+        <p>
+          Tenderly was built to be a calm, quiet, and private sanctuary for self-care and gentle reflection. We believe that caring for yourself should never come at the expense of your digital privacy.
+        </p>
+        <p>
+          Tenderly operates on an entirely <strong>local-first and offline-only architecture</strong>. The application does not connect to any proprietary servers, cloud databases, external APIs, or analytics platforms.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="icon">📦</span> 2. Data Stored Locally on Your Device</h2>
+        <p>
+          All data generated or entered while using Tenderly is stored exclusively within your device's local memory using React Native's <code>AsyncStorage</code>. No data is ever transmitted off your device.
+        </p>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Storage Key</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Preferred Name</strong></td>
+                <td><code>@tenderly_user_settings</code></td>
+                <td>Your preferred display name so Clover can address you warmly in greetings.</td>
+              </tr>
+              <tr>
+                <td><strong>Clover Growth State</strong></td>
+                <td><code>@tenderly_clover_state</code></td>
+                <td>Tracks Clover's current growth stage (1–5) and cumulative care count (0–21).</td>
+              </tr>
+              <tr>
+                <td><strong>Daily Care Messages</strong></td>
+                <td><code>@tenderly_daily_messages_state</code></td>
+                <td>Keeps daily care tasks and completed flags stable for the current calendar day.</td>
+              </tr>
+              <tr>
+                <td><strong>Garden Sanctuary</strong></td>
+                <td><code>@tenderly_garden_flowers</code></td>
+                <td>Stores the records of mature flowers gathered from completed growth cycles.</td>
+              </tr>
+              <tr>
+                <td><strong>Custom Bouquets</strong></td>
+                <td><code>@tenderly_bouquets</code></td>
+                <td>Stores bouquet arrangements created in the Bouquet Studio.</td>
+              </tr>
+              <tr>
+                <td><strong>Whispers (Affirmations)</strong></td>
+                <td><code>@tenderly_whisper_state</code></td>
+                <td>Tracks the randomized sequence index for daily affirmation display.</td>
+              </tr>
+              <tr>
+                <td><strong>Visual Theme</strong></td>
+                <td><code>@tenderly_theme</code></td>
+                <td>Saves your chosen color theme (Garden, Midnight, Lavender Dusk, Misty Morning).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="icon">🛡️</span> 3. What We Do NOT Collect</h2>
+        <p>
+          Because Tenderly is completely self-contained and operates without a remote server, we do not collect, process, or transmit any user data whatsoever. Specifically, there are:
+        </p>
+        <ul class="cross-list">
+          <li><strong>No user accounts or logins:</strong> You never need to provide an email, phone number, password, or profile information.</li>
+          <li><strong>No analytics or tracking:</strong> We do not track page views, button clicks, screen time, session lengths, or usage habits.</li>
+          <li><strong>No advertisements:</strong> There are zero third-party advertising SDKs, ad networks, or banner ads in the application.</li>
+          <li><strong>No device identifiers or telemetry:</strong> We do not access your IP address, IMEI, Android Advertising ID (AAID), or hardware identifiers.</li>
+          <li><strong>No location tracking:</strong> Tenderly does not access GPS, network location, or Wi-Fi data.</li>
+          <li><strong>No external AI or chatbots:</strong> All plant messages and affirmations are bundled locally within static JSON files.</li>
+          <li><strong>No in-app purchases or financial tracking:</strong> Tenderly has no subscriptions, paywalls, or payment processors.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="icon">🔄</span> 4. How Your Data Is Used</h2>
+        <p>
+          The information saved on your device is used solely to maintain application state between sessions:
+        </p>
+        <ul>
+          <li>Allowing Clover to address you by your chosen name.</li>
+          <li>Remembering your plant's growth stage and care count.</li>
+          <li>Ensuring daily care requests reset naturally at local midnight.</li>
+          <li>Displaying your permanent sanctuary of gathered garden flowers and bouquets.</li>
+          <li>Preserving your selected visual aesthetic theme.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="icon">🤝</span> 5. Data Sharing & Third Parties</h2>
+        <p>
+          We do not sell, rent, trade, or share any personal information with any third party under any circumstances. There are no third-party software development kits (SDKs) embedded in Tenderly that collect or process user data.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="icon">🗑️</span> 6. Data Retention, Control & Deletion</h2>
+        <p>
+          You have full and unilateral control over all data stored by Tenderly:
+        </p>
+        <div class="highlight-card">
+          <p>
+            <strong>Complete Deletion:</strong> Because all data is stored exclusively in your device's local application sandbox, deleting or uninstalling Tenderly from your device immediately, permanently, and irreversibly destroys all saved data, including your name, care history, garden blooms, and bouquets.
+          </p>
+          <p style="margin-top: 0.5rem;">
+            You can also reset data at any time without uninstalling by clearing the app's cache and storage in your Android/iOS system settings.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="icon">🧸</span> 7. Children’s Privacy</h2>
+        <p>
+          Tenderly is designed for audiences of all ages, offering a gentle, peaceful botanical experience. Because Tenderly collects no personal information whatsoever, it fully complies with the Children’s Online Privacy Protection Act (COPPA), the General Data Protection Regulation (GDPR-K), and the Google Play Families Policy.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="icon">📱</span> 8. Google Play Policy Compliance</h2>
+        <p>
+          In accordance with Google Play's User Data policy and Data Safety requirements:
+        </p>
+        <ul>
+          <li><strong>Data Collection:</strong> No user data is collected.</li>
+          <li><strong>Data Sharing:</strong> No user data is shared with third parties.</li>
+          <li><strong>Security Practices:</strong> Because data is not transmitted over the internet, network transmission risks are inherently eliminated. Local device encryption provided by the operating system protects on-device application storage.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="icon">📝</span> 9. Changes to This Privacy Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time to reflect future software enhancements or regulatory standards. If changes are made, the revised policy will be posted on this webpage with an updated Effective Date, and the in-app Privacy Policy screen will be updated in the corresponding app release.
+        </p>
+      </section>
+
+      <section>
+        <h2><span class="icon">💌</span> 10. Contact Us</h2>
+        <p>
+          If you have any questions, feedback, or concerns regarding this Privacy Policy or Tenderly, please feel free to reach out to the developer:
+        </p>
+        <div class="highlight-card">
+          <p><strong>Developer:</strong> Chitra Kulkarni</p>
+          <p><strong>Project:</strong> Tenderly App (<code>com.tenderly.app</code>)</p>
+          <p><strong>Repository:</strong> <a href="https://github.com/chitrakulkarni2830/tenderly-app" target="_blank" rel="noopener noreferrer" style="color: var(--accent); font-weight: 600;">github.com/chitrakulkarni2830/tenderly-app</a></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 Tenderly. Handcrafted with gentle care.</p>
+      <p style="margin-top: 0.25rem;">A quiet botanical self-care companion.</p>
+    </footer>
+  </div>
+
+</body>
+</html>
