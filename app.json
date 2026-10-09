@@ -18,7 +18,11 @@
       }
     },
     "web": {
+      "output": "static",
       "favicon": "./assets/favicon.png"
+    },
+    "experiments": {
+      "baseUrl": "/tenderly-app"
     },
     "plugins": [
       "expo-router",
